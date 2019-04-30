@@ -1,47 +1,59 @@
-import React, { Component } from 'react';
-import FormErrors from "../FormErrors";
-import Validate from "../utility/FormValidation";
+import React, { Component } from 'react'
+import FormErrors from '../FormErrors'
+import Validate from '../utility/FormValidation'
+import { Auth } from 'aws-amplify'
 
 class LogIn extends Component {
   state = {
-    username: "",
-    password: "",
+    username: '',
+    password: '',
     errors: {
       cognito: null,
-      blankfield: false
-    }
-  };
+      blankfield: false,
+    },
+  }
 
   clearErrorState = () => {
     this.setState({
       errors: {
         cognito: null,
-        blankfield: false
-      }
-    });
-  };
+        blankfield: false,
+      },
+    })
+  }
 
   handleSubmit = async event => {
-    event.preventDefault();
+    event.preventDefault()
 
     // Form validation
-    this.clearErrorState();
-    const error = Validate(event, this.state);
+    this.clearErrorState()
+    const error = Validate(event, this.state)
     if (error) {
       this.setState({
-        errors: { ...this.state.errors, ...error }
-      });
+        errors: { ...this.state.errors, ...error },
+      })
     }
 
     // AWS Cognito integration here
-  };
+    const { username, password } = this.state
+    const { history } = this.props
+
+    try {
+      const loginResult = await Auth.signIn(username, password)
+      console.log('loginResult', loginResult)
+      history.push('/products')
+    } catch (err) {
+      const error = !err.message ? { message: err } : err
+      this.setState({ errors: { ...this.errors, cognito: error } })
+    }
+  }
 
   onInputChange = event => {
     this.setState({
-      [event.target.id]: event.target.value
-    });
-    document.getElementById(event.target.id).classList.remove("is-danger");
-  };
+      [event.target.id]: event.target.value,
+    })
+    document.getElementById(event.target.id).classList.remove('is-danger')
+  }
 
   render() {
     return (
@@ -53,8 +65,8 @@ class LogIn extends Component {
           <form onSubmit={this.handleSubmit}>
             <div className="field">
               <p className="control">
-                <input 
-                  className="input" 
+                <input
+                  className="input"
                   type="text"
                   id="username"
                   aria-describedby="usernameHelp"
@@ -66,8 +78,8 @@ class LogIn extends Component {
             </div>
             <div className="field">
               <p className="control has-icons-left">
-                <input 
-                  className="input" 
+                <input
+                  className="input"
                   type="password"
                   id="password"
                   placeholder="Password"
@@ -75,7 +87,7 @@ class LogIn extends Component {
                   onChange={this.onInputChange}
                 />
                 <span className="icon is-small is-left">
-                  <i className="fas fa-lock"></i>
+                  <i className="fas fa-lock" />
                 </span>
               </p>
             </div>
@@ -86,16 +98,14 @@ class LogIn extends Component {
             </div>
             <div className="field">
               <p className="control">
-                <button className="button is-success">
-                  Login
-                </button>
+                <button className="button is-success">Login</button>
               </p>
             </div>
           </form>
         </div>
       </section>
-    );
+    )
   }
 }
 
-export default LogIn;
+export default LogIn
